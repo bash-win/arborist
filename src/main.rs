@@ -11,13 +11,21 @@ fn main() {
     let prog_args = handle_program_arguments(args);
     let path = env::current_dir().unwrap_or_default();
 
-    for entry in WalkDir::new(path)
+    for entry in WalkDir::new(&path)
+        .sort_by_file_name()
         .max_depth(prog_args.depth)
         .into_iter()
         .filter_entry(|e| !is_hidden(e))
         .filter_map(|e| e.ok())
     {
-        println!("{}", entry.path().display());
+        println!(
+            "{}",
+            entry
+                .path()
+                .display()
+                .to_string()
+                .replace(path.to_str().expect("Could not convert path to string"), "")
+        );
     }
 }
 
