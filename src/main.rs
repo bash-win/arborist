@@ -10,6 +10,18 @@ struct Args {
     /// The depth to which arborist recurses to
     #[arg(short, long, default_value_t = 3)]
     depth: usize,
+
+    /// Saves the output to a file
+    #[arg(short, long)]
+    file: Option<String>,
+
+    /// Respect .gitignore rules. Automatic behavior. Optionally, provide your own file
+    #[arg(short, long)]
+    ignore: Option<String>,
+
+    /// Print a summary at the bottom which shows the number of directories and files
+    #[arg(short, long, default_value_t = false)]
+    stats: bool,
 }
 
 fn main() {
