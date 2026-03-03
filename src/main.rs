@@ -1,7 +1,6 @@
 use clap::Parser;
+use ignore::{DirEntry, WalkBuilder};
 use std::env;
-
-use walkdir::{DirEntry, WalkDir};
 
 /// Simple CLI program to generate a directory tree for README files
 #[derive(Parser, Debug)]
@@ -26,30 +25,15 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let path = env::current_dir().unwrap_or_default();
+    let cwd = env::current_dir().unwrap_or_default();
 
-    for entry in WalkDir::new(&path)
-        .sort_by_file_name()
-        .max_depth(args.depth)
-        .into_iter()
-        .filter_entry(|e| !is_hidden(e))
-        .filter_map(|e| e.ok())
-    {
-        println!(
-            "{}",
-            entry
-                .path()
-                .display()
-                .to_string()
-                .replace(path.to_str().expect("Could not convert path to string"), "")
-        );
+    for entry in WalkBuilder::new(&cwd).max_depth(Some(args.depth)).build() {
+        let entry: DirEntry = entry.expect("Cannot parse the file/directory");
+        let full_path = entry.path();
+
+        match full_path.strip_prefix(&cwd) {
+            Ok(relative_path) => println!("{}", relative_path.display()),
+            Err(_) => println!("{}", full_path.display()),
+        }
     }
-}
-
-fn is_hidden(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.starts_with("."))
-        .unwrap_or(false)
 }
