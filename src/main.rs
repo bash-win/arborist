@@ -34,7 +34,8 @@ fn main() {
     let args = Args::parse();
     let cwd = env::current_dir().unwrap_or_default();
 
-    let raw_output = get_raw_directory_output(&args, &cwd);
+    let mut raw_output = get_raw_directory_output(&args, &cwd);
+    sort_by_directories_asc(&mut raw_output);
     for item in raw_output {
         println!("{item:?}");
     }
@@ -67,4 +68,20 @@ fn get_raw_directory_output(args: &Args, cwd: &Path) -> Vec<FileInfo> {
     }
 
     result
+}
+
+fn sort_by_directories_asc(file_list: &mut [FileInfo]) {
+    file_list.sort_by(|a, b| {
+        let a_parent = Path::new(&a.relative_path).parent();
+        let b_parent = Path::new(&b.relative_path).parent();
+
+        a_parent
+            .cmp(&b_parent)
+            .then_with(|| b.is_directory.cmp(&a.is_directory))
+            .then_with(|| {
+                let a_file_name = Path::new(&a.relative_path).file_name();
+                let b_file_name = Path::new(&b.relative_path).file_name();
+                a_file_name.cmp(&b_file_name)
+            })
+    });
 }
