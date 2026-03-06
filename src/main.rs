@@ -111,7 +111,7 @@ fn build_tree(args: &Args, cwd: &Path) -> (HashMap<String, Vec<FileInfo>>, usize
         });
     }
 
-    (tree, directories, files)
+    (tree, directories - 1, files)
 }
 
 /// Renders the directory using the directory tree hashmap.
