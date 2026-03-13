@@ -73,7 +73,6 @@ Arborist has a feature that allows one to add comments to particular files, expl
 
 ```
 file_name > description
-
 ```
 Each file_name and it's corresponding description must be specified on a new line.
 
