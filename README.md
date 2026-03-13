@@ -57,6 +57,7 @@ arborist
 | `-f, --file <PATH>` | Save output to a file | — |
 | `-i, --ignore` | Respect `.gitignore` rules | false |
 | `-s, --stats` | Print file and directory count summary | false |
+| `-c, --comments <COMMENTS_PATH` | Adds description comments against file names | - |
 
 ### Examples
 
@@ -77,6 +78,15 @@ Respect `.gitignore` rules:
 ```
 arborist --ignore
 ```
+
+### Comment File Format
+
+Arborist has a feature that allows one to add comments to particular files, explaining their contents. The file needs to have lines in the following format:
+
+```
+file_name > description
+```
+Each file_name and it's corresponding description must be specified on a new line.
 
 ## Dependencies
 
