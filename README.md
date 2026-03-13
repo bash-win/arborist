@@ -6,26 +6,32 @@ A command-line tool that generates directory tree visualizations. Built in Rust.
 
 ```
 Total:
-Directories: 8 | Files: 9 
+Directories: 13 | Files: 11
 .
-├── src/
-│   └── main.rs
-├── Cargo.lock
-├── Cargo.toml
-├── target/
+├── 📁 src/
+│   └── 🦀 main.rs
+├── 🔒 Cargo.lock
+├── 📦 Cargo.toml
+├── 📁 target/
 │   ├── CACHEDIR.TAG
-│   ├── debug/
-│   │   ├── build/
-│   │   ├── arborist
-│   ├── release/
+│   ├── 📁 debug/
+│   │   ├── 📁 examples/
+│   │   ├── 📁 deps/
 │   │   ├── arborist.d
-│   │   ├── build/
+│   │   ├── 📁 build/
 │   │   ├── arborist
-│   │   └── incremental/
-│   └── flycheck0/
+│   │   └── 📁 incremental/
+│   ├── 📁 release/
+│   │   ├── 📁 examples/
+│   │   ├── 📁 deps/
+│   │   ├── arborist.d
+│   │   ├── 📁 build/
+│   │   ├── arborist
+│   │   └── 📁 incremental/
+│   └── 📁 flycheck0/
 │       ├── stderr
 │       └── stdout
-└── README.md
+└── 📄 README.md
 ```
 
 
@@ -57,7 +63,19 @@ arborist
 | `-f, --file <PATH>` | Save output to a file | — |
 | `-i, --ignore` | Respect `.gitignore` rules | false |
 | `-s, --stats` | Print file and directory count summary | false |
-| `-c, --comments <COMMENTS_PATH` | Adds description comments against file names | - |
+| `-c, --comments <COMMENTS_PATH>` | Adds description comments against file names | - |
+| `-I, --icons` | Enables file type icons | false |
+| `--icon-file` | Custom icon mapping file to override defaults | _ |
+
+### Comment File Format
+
+Arborist has a feature that allows one to add comments to particular files, explaining their contents. The file needs to have lines in the following format:
+
+```
+file_name > description
+
+```
+Each file_name and it's corresponding description must be specified on a new line.
 
 ### Examples
 
@@ -78,15 +96,6 @@ Respect `.gitignore` rules:
 ```
 arborist --ignore
 ```
-
-### Comment File Format
-
-Arborist has a feature that allows one to add comments to particular files, explaining their contents. The file needs to have lines in the following format:
-
-```
-file_name > description
-```
-Each file_name and it's corresponding description must be specified on a new line.
 
 ## Dependencies
 

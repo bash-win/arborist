@@ -27,6 +27,14 @@ struct Args {
     /// File containing the file names and the description of the files to be displayed.
     #[arg(short, long)]
     comments: Option<String>,
+
+    /// Enable file type icons.
+    #[arg(short = 'I', long, default_value_t = false)]
+    icons: bool,
+
+    /// Custom icon mapping file to override defaults.
+    #[arg(long)]
+    icon_file: Option<String>,
 }
 
 #[derive(Debug)]
@@ -51,7 +59,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cwd = env::current_dir().unwrap_or_default();
 
     let (tree, directories, files) = build_tree(&args, &cwd);
-    let lines = build_tree_lines(&tree, "");
+    let icons = build_icon_map(&args);
+    let lines = build_tree_lines(&tree, "", &icons);
     let comments = args.comments.map(parse_comment_file_into_hashmap);
     let output = format_with_comments(&lines, &comments);
 
@@ -141,8 +150,87 @@ fn parse_comment_file_into_hashmap(path: String) -> HashMap<String, String> {
     result
 }
 
+fn default_icon_map() -> HashMap<String, String> {
+    HashMap::from(
+        [
+            ("rs", "🦀"),
+            ("toml", "📦"),
+            ("md", "📄"),
+            ("lock", "🔒"),
+            ("txt", "📝"),
+            ("json", "📋"),
+            ("yaml", "⚙️"),
+            ("yml", "⚙️"),
+            ("js", "🟨"),
+            ("ts", "🔷"),
+            ("py", "🐍"),
+            ("rb", "💎"),
+            ("go", "🐹"),
+            ("c", "⚡"),
+            ("h", "⚡"),
+            ("cpp", "⚡"),
+            ("html", "🌐"),
+            ("css", "🎨"),
+            ("sh", "🐚"),
+            ("/", "📁"),
+        ]
+        .map(|(k, v)| (k.to_string(), v.to_string())),
+    )
+}
+
+fn build_icon_map(args: &Args) -> Option<HashMap<String, String>> {
+    if !args.icons {
+        return None;
+    }
+
+    let mut icons = default_icon_map();
+
+    if let Some(ref path) = args.icon_file {
+        let custom = read_to_string(path).unwrap_or_default();
+        let custom_icons = parse_icon_str(&custom);
+        icons.extend(custom_icons);
+    }
+
+    Some(icons)
+}
+
+fn parse_icon_str(content: &str) -> HashMap<String, String> {
+    let mut result = HashMap::new();
+    for line in content.lines() {
+        let Some((ext, icon)) = line.split_once('>') else {
+            continue;
+        };
+        result.insert(ext.trim().to_string(), icon.trim().to_string());
+    }
+    result
+}
+
+fn get_icon(name: &str, is_directory: bool, icons: &Option<HashMap<String, String>>) -> String {
+    let Some(icon_map) = icons else {
+        return String::new();
+    };
+
+    if is_directory {
+        return icon_map
+            .get("/")
+            .map(|i| format!("{} ", i))
+            .unwrap_or_default();
+    }
+
+    Path::new(name)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .and_then(|ext| icon_map.get(ext))
+        .map(|i| format!("{} ", i))
+        .unwrap_or_default()
+}
+
 /// Builds a vector of tree lines with the display text and file name for comment lookup.
-fn build_tree_lines(tree: &HashMap<String, Vec<FileInfo>>, key: &str) -> Vec<TreeLine> {
+fn build_tree_lines(
+    tree: &HashMap<String, Vec<FileInfo>>,
+    key: &str,
+    icons: &Option<HashMap<String, String>>,
+) -> Vec<TreeLine> {
     let mut lines: Vec<TreeLine> = Vec::new();
 
     if let Some(children) = tree.get(key) {
@@ -150,7 +238,8 @@ fn build_tree_lines(tree: &HashMap<String, Vec<FileInfo>>, key: &str) -> Vec<Tre
             let is_last = i == children.len() - 1;
             let connector = if is_last { "└── " } else { "├── " };
 
-            let mut text = format!("{}{}", connector, child.name);
+            let icon = get_icon(&child.name, child.is_directory, icons);
+            let mut text = format!("{}{}{}", connector, icon, child.name);
             if child.is_directory {
                 text.push('/');
             }
@@ -161,7 +250,7 @@ fn build_tree_lines(tree: &HashMap<String, Vec<FileInfo>>, key: &str) -> Vec<Tre
             });
 
             if child.is_directory {
-                let subtree = build_tree_lines(tree, &child.full_relative_path);
+                let subtree = build_tree_lines(tree, &child.full_relative_path, icons);
                 let prefix = if is_last { "    " } else { "│   " };
                 for sub_line in subtree {
                     lines.push(TreeLine {
